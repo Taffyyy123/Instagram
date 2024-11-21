@@ -1,19 +1,5 @@
-const mongoose = require("mongoose");
 const userModel = require("../models/userModel");
-const express = require("express");
 const bcrypt = require("bcrypt");
-const postModel = require("../models/postModel");
-const { post } = require("../routes/userRoute");
-const app = express();
-app.use(express.json());
-
-const connectToDb = async () => {
-  const res = await mongoose.connect(
-    "mongodb+srv://tsolmn9:Taffyyy12@test.1s5hd.mongodb.net/IG?retryWrites=true&w=majority&appName=TEST"
-  );
-  if (res) console.log("db connected");
-};
-connectToDb();
 
 const signupUser = async (req, res) => {
   try {
@@ -35,12 +21,50 @@ const signupUser = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const Posts = await userModel.find().populate("posts");
+    const Posts = await userModel.find().populate("posts", "caption postImg");
     res.send(Posts);
   } catch (error) {
     console.log(error);
   }
 };
 
-module.exports.signupUser = signupUser;
-module.exports.getUser = getUser;
+const followUsers = async (req, res) => {
+  const { followersId, followingId } = req.body;
+  if (await userModel.findOne({ followers: followingId }))
+    res.send("already followed");
+  try {
+    await userModel.findByIdAndUpdate(followersId, {
+      $addToSet: {
+        followers: followingId,
+      },
+    });
+    await userModel.findByIdAndUpdate(followingId, {
+      $addToSet: {
+        following: followersId,
+      },
+    });
+    res.send("Done");
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const unFollowUser = async (req, res) => {
+  const { followersId, followingId } = req.body;
+  const checkFollower = await userModel.findOne({ followers: followingId });
+  if (checkFollower) {
+    await userModel.findByIdAndUpdate(followersId, {
+      $pull: {
+        followers: followingId,
+      },
+    });
+    await userModel.findByIdAndUpdate(followingId, {
+      $pull: {
+        following: followersId,
+      },
+    });
+    res.send(`Deleted `);
+  }
+};
+
+module.exports = { signupUser, getUser, followUsers, unFollowUser };

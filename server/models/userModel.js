@@ -8,6 +8,8 @@ const userSchema = new Schema(
     email: { type: String, required: true },
     proImg: { type: String },
     posts: [{ type: mongoose.Types.ObjectId, ref: "posts" }],
+    followers: [{ type: mongoose.Types.ObjectId, ref: "users" }],
+    following: [{ type: mongoose.Types.ObjectId, ref: "users" }],
   },
   { timestamps: true }
 );

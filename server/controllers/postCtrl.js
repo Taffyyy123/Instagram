@@ -1,18 +1,5 @@
-const mongoose = require("mongoose");
-const userModel = require("../models/userModel");
-const express = require("express");
-const bcrypt = require("bcrypt");
 const postModel = require("../models/postModel");
-const app = express();
-app.use(express.json());
-
-const connectToDb = async () => {
-  const res = await mongoose.connect(
-    "mongodb+srv://tsolmn9:Taffyyy12@test.1s5hd.mongodb.net/IG?retryWrites=true&w=majority&appName=TEST"
-  );
-  if (res) console.log("db connected");
-};
-connectToDb();
+const userModel = require("../models/userModel");
 
 const createPost = async (req, res) => {
   try {
@@ -30,5 +17,29 @@ const createPost = async (req, res) => {
     console.log(error);
   }
 };
+const getPosts = async (req, res) => {
+  try {
+    const Users = await postModel
+      .find()
+      .populate(
+        "userId comments likes",
+        "username password email comment userId "
+      );
+    res.send(Users);
+  } catch (error) {
+    console.log(error);
+  }
+};
+const getOnePost = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const post = await postModel
+      .findOne({ _id: id })
+      .populate("comments likes", "comment userId");
+    res.send(post);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-module.exports.createPost = createPost;
+module.exports = { createPost, getPosts, getOnePost };
